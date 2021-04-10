@@ -57,7 +57,7 @@ export const PaginaContactos = (props) => {
       });
     });
   }, [contactos]);
-
+//
   return (
     <>
       <View style={stylesSass.father}>
