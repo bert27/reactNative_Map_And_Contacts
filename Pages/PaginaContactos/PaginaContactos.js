@@ -18,8 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Userpng from "./Usuario.png";
 import SearchBar from "./SearchBar";
-import Contacts from "react-native-contacts";
-import { PermissionsAndroid } from "react-native";
+import * as Contacts from "expo-contacts";
 import stylesSass from "./estilos.sass";
 
 export const PaginaContactos = (props) => {
@@ -31,33 +30,48 @@ export const PaginaContactos = (props) => {
     console.log(Contacto.displayName);
   }, []);
 
+  const getNumber = useCallback((contacto) => {
+    const numero = contacto?.phoneNumbers;
+    if (numero !== undefined) {
+      return numero[0]?.number;
+    }
+
+    return "";
+  }, []);
+
   useEffect(() => {
     console.log("Cargando contactos");
-    PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CONTACTS, {
-      title: "Contacts",
-      message: "This app would like to view your contacts.",
-    }).then(() => {
-      Contacts.getAll().then((contacts) => {
-        var Contactos = Object.keys(contacts).map(([key, val], i) => {
-          var Numero = contacts[i].phoneNumbers[0];
-          return (
-            <Text
-              style={styles.ElementoLista}
-              key={"Person-" + i}
-              onPress={() => this.ContactoElegido(contacts[i])}
-            >
-              <Image style={styles.Image} source={require("./Usuario.png")} />
-              <Text>{contacts[i].displayName} </Text>
-              <Text>{contacts[i].phoneNumbers.id} </Text>
-            </Text>
-          );
+    (async () => {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status === "granted") {
+        const { data } = await Contacts.getContactsAsync({
+          fields: [Contacts.Fields.PhoneNumbers],
         });
+        if (data.length > 0) {
+          setcontactos(
+            data.map((contacto, index) => {
+              return (
+                <Text
+                  style={styles.ElementoLista}
+                  onPress={() => ContactoElegido(data[i])}
+                >
+                  <Image
+                    style={styles.Image}
+                    source={require("./Usuario.png")}
+                  />
+                  <Text>
+                    {contacto.name}
+                    {getNumber(contacto)}
+                  </Text>
+                </Text>
+              );
+            })
+          );
+        }
+      }
+    })();
+  }, []);
 
-        setcontactos(Contactos);
-      });
-    });
-  }, [contactos]);
-//
   return (
     <>
       <View style={stylesSass.father}>
